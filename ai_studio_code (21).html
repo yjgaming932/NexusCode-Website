@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusCode | The Digital Forge</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Fira+Code:wght@400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #8b5cf6;
+            --primary-hover: #7c3aed;
+            --secondary: #06b6d4;
+            --accent: #f43f5e;
+            --bg-dark: #070b14;
+            --glass: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --error: #ef4444;
+            --success: #22c55e;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+        body { background: var(--bg-dark); color: #f8fafc; font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; line-height: 1.6; }
+
+        /* --- BACKGROUND --- */
+        .mesh-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; background: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #070b14 100%); }
+        .blob { position: absolute; width: 600px; height: 600px; background: var(--primary); filter: blur(150px); opacity: 0.1; border-radius: 50%; animation: move 25s infinite alternate; }
+        @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes pulse-glow { 0%, 100% { filter: drop-shadow(0 0 2px var(--primary)); opacity: 1; } 50% { filter: drop-shadow(0 0 15px var(--primary)); opacity: 0.7; } }
+        @keyframes bounce-soft { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+        
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-spin-slow { animation: spin-slow 12s linear infinite; }
+        .animate-pulse { animation: pulse-glow 2s ease-in-out infinite; }
+        .animate-bounce { animation: bounce-soft 3s ease-in-out infinite; }
+
+        .reveal-item { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1); }
+        .reveal-item.visible { opacity: 1; transform: translateY(0); }
+
+        /* --- NAV --- */
+        nav { position: fixed; top: 0; width: 100%; padding: 1.2rem 8%; display: flex; justify-content: space-between; align-items: center; background: rgba(7, 11, 20, 0.8); backdrop-filter: blur(20px); z-index: 1000; border-bottom: 1px solid var(--glass-border); }
+        .nav-links a { color: #94a3b8; text-decoration: none; font-weight: 500; transition: 0.3s; cursor: pointer; margin: 0 15px; }
+        .nav-links a.active { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+
+        /* --- MARQUEE --- */
+        .marquee { overflow: hidden; white-space: nowrap; padding: 30px 0; background: rgba(255,255,255,0.02); margin: 40px 0; border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); }
+        .marquee-content { display: inline-block; animation: scroll 30s linear infinite; }
+        .marquee-content span { font-size: 2.5rem; font-weight: 700; margin: 0 40px; color: rgba(255,255,255,0.05); font-family: 'Fira Code', monospace; }
+        @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* --- HERO & HOLOGRAM --- */
+        .hero { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; align-items: center; margin-bottom: 60px; }
+        .hologram-box { position: relative; padding: 40px; background: rgba(139, 92, 246, 0.05); border: 1px solid var(--primary); border-radius: 30px; backdrop-filter: blur(10px); height: 380px; overflow: hidden; }
+        .hologram-box::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--primary); animation: scan 4s linear infinite; }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        #type-target { font-family: 'Fira Code', monospace; color: var(--secondary); font-size: 1rem; }
+
+        /* --- CARD UI --- */
+        .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .service-card { position: relative; border-radius: 30px; overflow: hidden; height: 420px; border: 1px solid var(--glass-border); cursor: pointer; transition: 0.5s; }
+        .service-card:hover { transform: translateY(-12px); border-color: var(--primary); }
+        .service-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.2; filter: grayscale(100%); transition: 0.5s; }
+        .service-card:hover .service-img { opacity: 0.4; filter: grayscale(0%); transform: scale(1.1); }
+        .service-content { position: relative; z-index: 2; padding: 30px; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; background: linear-gradient(to top, #070b14 60%, transparent); }
+        .tech-pill { display: inline-block; padding: 4px 10px; background: rgba(255,255,255,0.05); border-radius: 20px; font-size: 0.7rem; margin: 3px; border: 1px solid var(--glass-border); }
+
+        /* --- BUTTONS --- */
+        .btn { padding: 14px 28px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; text-decoration: none; display: inline-block; text-align: center; }
+        .btn-p { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); }
+        .btn-p:hover { background: var(--primary-hover); transform: translateY(-3px); }
+        .btn-ghost { background: transparent; border: 1px solid var(--primary); color: white; }
+
+        /* --- PRICING --- */
+        .check-list { list-style: none; margin: 20px 0; text-align: left; }
+        .check-list li { font-size: 0.85rem; color: #94a3b8; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+        .check-list li i { color: var(--success); }
+
+        /* --- PAGE CONTENT --- */
+        .page { display: none; padding: 140px 8% 60px; min-height: 100vh; animation: fadeIn 0.6s ease-in-out; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- MODAL & CHECKOUT --- */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; justify-content: center; align-items: center; z-index: 2000; backdrop-filter: blur(15px); padding: 20px; }
+        .modal-box { background: #111827; width: 100%; max-width: 750px; padding: 40px; border-radius: 30px; border: 1px solid var(--primary); position: relative; max-height: 95vh; overflow-y: auto; }
+        .checkout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.8rem; color: #94a3b8; margin-bottom: 5px; }
+        .form-control { width: 100%; padding: 12px; background: #070b14; border: 1px solid var(--glass-border); border-radius: 10px; color: white; transition: 0.3s; }
+        .form-control:focus { border-color: var(--primary); outline: none; }
+        .pay-selector { display: flex; gap: 15px; margin: 20px 0; }
+        .pay-option { flex: 1; padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border); cursor: pointer; text-align: center; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .pay-option.active { border-color: var(--primary); background: rgba(139, 92, 246, 0.1); }
+        .payment-pane { display: none; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 20px; border: 1px solid var(--glass-border); margin-top: 10px; }
+        .payment-pane.active { display: block; animation: fadeIn 0.3s ease; }
+        #form-error-toast { background: var(--error); color: white; padding: 10px; border-radius: 8px; font-size: 0.8rem; margin-top: 15px; display: none; text-align: center; }
+
+        .glow-text { background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; }
+    </style>
+</head>
+<body>
+
+    <div class="mesh-container"><div class="blob"></div></div>
+
+    <nav>
+        <div style="font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px;">
+            <div style="width:30px; height:30px; background:var(--primary); border-radius:8px; rotate:45deg;"></div>
+            NEXUSCODE
+        </div>
+        <div class="nav-links">
+            <a onclick="showPage('home')" id="link-home" class="active">Home</a>
+            <a onclick="showPage('services')" id="link-services">Courses</a>
+            <a onclick="showPage('pricing')" id="link-pricing">Pricing</a>
+            <a onclick="showPage('about')" id="link-about">About & Stories</a>
+        </div>
+        <button class="btn btn-p" onclick="openEnrollModal('Nexus Membership')">Enroll Now</button>
+    </nav>
+
+    <!-- HOME PAGE -->
+    <div id="home" class="page active">
+        <section class="hero">
+            <div class="hero-text">
+                <h1 style="font-size: 5rem; line-height: 1;">Architect Your <br><span class="glow-text">Legacy.</span></h1>
+                <p style="font-size: 1.3rem; color: #94a3b8; margin: 30px 0;">Elite systems training. Master the infrastructure used by world-class dev teams.</p>
+                <button class="btn btn-p" onclick="showPage('services')">Enter the Curriculum</button>
+            </div>
+            <div class="hologram-box"><div id="type-target"></div></div>
+        </section>
+        <div class="marquee">
+            <div class="marquee-content">
+                <span>React.js</span> <span>Python</span> <span>Node.js</span> <span>Solidity</span> <span>Next.js</span> <span>Docker</span> <span>Rust</span> <span>AWS</span> <span>Kubernetes</span> <span>TensorFlow</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- COURSES PAGE (5 TRACKS RESTORED) -->
+    <div id="services" class="page">
+        <h2 style="text-align: center; font-size: 3rem; margin-bottom: 50px;">The <span class="glow-text">Nexus Tracks</span></h2>
+        <div class="services-grid">
+            <div class="service-card" onclick="openEnrollModal('Full-Stack Track')">
+                <img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800" class="service-img">
+                <div class="service-content">
+                    <i data-lucide="code-2" color="#8b5cf6"></i>
+                    <h3>Full-Stack Architect</h3>
+                    <div><span class="tech-pill">Next.js 14</span><span class="tech-pill">TypeScript</span></div>
+                    <button class="btn btn-p" style="margin-top:15px; font-size:0.8rem;">Select Track</button>
+                </div>
+            </div>
+            <div class="service-card" onclick="openEnrollModal('AI Track')">
+                <img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=800" class="service-img">
+                <div class="service-content">
+                    <i data-lucide="brain-circuit" color="#06b6d4"></i>
+                    <h3>AI Engineering</h3>
+                    <div><span class="tech-pill">OpenAI</span><span class="tech-pill">Python</span></div>
+                    <button class="btn btn-p" style="margin-top:15px; font-size:0.8rem;">Select Track</button>
+                </div>
+            </div>
+            <div class="service-card" onclick="openEnrollModal('Cyber Track')">
+                <img src="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=800" class="service-img">
+                <div class="service-content">
+                    <i data-lucide="shield-check" color="#f43f5e"></i>
+                    <h3>Cyber Security</h3>
+                    <div><span class="tech-pill">Kali Linux</span><span class="tech-pill">Security+</span></div>
+                    <button class="btn btn-p" style="margin-top:15px; font-size:0.8rem;">Select Track</button>
+                </div>
+            </div>
+            <div class="service-card" onclick="openEnrollModal('Web3 Track')">
+                <img src="https://images.unsplash.com/photo-1639762681485-074b7f938ba0?q=80&w=800" class="service-img">
+                <div class="service-content">
+                    <i data-lucide="layers" color="#8b5cf6"></i>
+                    <h3>Blockchain Dev</h3>
+                    <div><span class="tech-pill">Solidity</span><span class="tech-pill">Ethereum</span></div>
+                    <button class="btn btn-p" style="margin-top:15px; font-size:0.8rem;">Select Track</button>
+                </div>
+            </div>
+            <div class="service-card" onclick="openEnrollModal('Data Track')">
+                <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=800" class="service-img">
+                <div class="service-content">
+                    <i data-lucide="database" color="#06b6d4"></i>
+                    <h3>Data Engineering</h3>
+                    <div><span class="tech-pill">Spark</span><span class="tech-pill">SQL</span></div>
+                    <button class="btn btn-p" style="margin-top:15px; font-size:0.8rem;">Select Track</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PRICING PAGE (BULLETS RESTORED) -->
+    <div id="pricing" class="page">
+        <h2 style="text-align: center; font-size: 3rem; margin-bottom: 50px;">Investment <span class="glow-text">Tiers</span></h2>
+        <div class="services-grid">
+            <div class="service-card" style="height: auto; padding: 40px; background: var(--glass);">
+                <h3>Starter</h3><h2 style="font-size: 3rem; margin: 15px 0;">$0</h2>
+                <ul class="check-list">
+                    <li><i data-lucide="check-circle" size="16"></i> 15+ Core Logic Lessons</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Community Discord Access</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Public GitHub Repo Help</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Basic Project Templates</li>
+                </ul>
+                <button class="btn btn-ghost" style="width:100%" onclick="openEnrollModal('Starter Plan')">Join Now</button>
+            </div>
+            <div class="service-card" style="height: auto; padding: 40px; border: 2px solid var(--primary); background: rgba(139,92,246,0.1);">
+                <h3>Pro Plan</h3><h2 style="font-size: 3rem; margin: 15px 0;">$49</h2>
+                <ul class="check-list">
+                    <li><i data-lucide="check-circle" size="16"></i> 50+ Advanced Projects</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Live Weekly Mentorship</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Private AI Sandbox Access</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Industry Certifications</li>
+                </ul>
+                <button class="btn btn-p" style="width:100%" onclick="openEnrollModal('Pro Plan')">Get Pro Access</button>
+            </div>
+            <div class="service-card" style="height: auto; padding: 40px; background: var(--glass);">
+                <h3>Elite Track</h3><h2 style="font-size: 3rem; margin: 15px 0;">$199</h2>
+                <ul class="check-list">
+                    <li><i data-lucide="check-circle" size="16"></i> 1-on-1 Dedicated Coach</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Job Placement Guarantee</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Direct Interview Pipelines</li>
+                    <li><i data-lucide="check-circle" size="16"></i> Private Repo Collaborations</li>
+                </ul>
+                <button class="btn btn-ghost" style="width:100%" onclick="openEnrollModal('Elite Plan')">Apply Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ABOUT & STORIES PAGE (FULL RESTORATION) -->
+    <div id="about" class="page">
+        <h2 style="text-align: center; font-size: 3rem; margin-bottom: 40px;" class="reveal-item">The <span class="glow-text">Nexus Mission</span></h2>
+        
+        <div class="service-card reveal-item" style="height: auto; padding: 40px; margin-bottom: 50px; background: var(--glass); border-left: 5px solid var(--primary);">
+            <h3>Pioneering the Future of Code</h3>
+            <p style="color: #cbd5e1; margin-top: 15px;">Founded in 2024, NexusCode operates as a high-performance environment where students code in live sandboxes, deploy to real servers, and receive direct feedback from senior leads at Google and Meta. We bridge the gap between academic theory and industry reality.</p>
+        </div>
+
+        <h3 class="reveal-item" style="margin-bottom: 30px; font-size: 1.8rem;">Core <span class="glow-text">Philosophy</span></h3>
+        <div class="services-grid reveal-item" style="margin-bottom: 60px;">
+            <div class="service-card" style="height: auto; padding: 30px; text-align: center; background: rgba(255,255,255,0.02);">
+                <div class="animate-float" style="margin-bottom: 20px;"><i data-lucide="cpu" size="48" color="#8b5cf6"></i></div>
+                <h4>Adaptive Innovation</h4>
+                <p style="font-size: 0.9rem; color: #94a3b8;">Curriculum that evolves weekly.</p>
+            </div>
+            <div class="service-card" style="height: auto; padding: 30px; text-align: center; background: rgba(255,255,255,0.02);">
+                <div class="animate-spin-slow" style="margin-bottom: 20px;"><i data-lucide="shield" size="48" color="#06b6d4"></i></div>
+                <h4>Zero-Trust Dev</h4>
+                <p style="font-size: 0.9rem; color: #94a3b8;">Security-first architectural training.</p>
+            </div>
+            <div class="service-card" style="height: auto; padding: 30px; text-align: center; background: rgba(255,255,255,0.02);">
+                <div class="animate-pulse" style="margin-bottom: 20px;"><i data-lucide="zap" size="48" color="#f43f5e"></i></div>
+                <h4>Instant Results</h4>
+                <p style="font-size: 0.9rem; color: #94a3b8;">Hired within 6 months of completion.</p>
+            </div>
+        </div>
+
+        <h3 class="reveal-item" style="margin-bottom: 30px; font-size: 1.8rem;">The <span class="glow-text">Methodology</span></h3>
+        <div class="services-grid reveal-item" style="margin-bottom: 60px;">
+            <div class="service-card" style="height: auto; padding: 30px; text-align: center; background: rgba(255,255,255,0.02);">
+                <div class="animate-bounce" style="margin-bottom: 20px;"><i data-lucide="terminal" size="48" color="#8b5cf6"></i></div>
+                <h4>Cloud Lab</h4>
+                <p style="font-size: 0.9rem; color: #94a3b8;">Live containerized environments.</p>
+            </div>
+            <div class="service-card" style="height: auto; padding: 30px; text-align: center; background: rgba(255,255,255,0.02);">
+                <div class="animate-float" style="margin-bottom: 20px;"><i data-lucide="server" size="48" color="#06b6d4"></i></div>
+                <h4>CI/CD Pipeline</h4>
+                <p style="font-size: 0.9rem; color: #94a3b8;">Full automated deployment mastery.</p>
+            </div>
+        </div>
+
+        <h3 class="reveal-item" style="margin-bottom: 30px; font-size: 1.8rem;">Student <span class="glow-text">Transmissions</span></h3>
+        <div class="services-grid reveal-item">
+            <div class="service-card" style="height: auto; padding: 30px; background: var(--glass);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                    <img src="https://i.pravatar.cc/100?u=1" style="width:45px; border-radius:50%; border:2px solid var(--primary);">
+                    <div><strong>Aria Vance</strong><br><small>Lead @ FinTech</small></div>
+                </div>
+                <p>"NexusCode didn't just teach me Python. It taught me how to scale."</p>
+            </div>
+            <div class="service-card" style="height: auto; padding: 30px; background: var(--glass);">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                    <img src="https://i.pravatar.cc/100?u=2" style="width:45px; border-radius:50%; border:2px solid var(--secondary);">
+                    <div><strong>Mark Thorne</strong><br><small>Hired at Stripe</small></div>
+                </div>
+                <p>"The Pro Track gave me a portfolio that actually speaks for itself."</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXPANDED CHECKOUT MODAL -->
+    <div class="modal" id="enrollModal">
+        <div class="modal-box">
+            <button onclick="closeModal()" style="position:absolute; right:20px; top:20px; background:none; border:none; color:white; cursor:pointer;"><i data-lucide="x"></i></button>
+            <h2 id="modalTitle">Enrollment: Pro Plan</h2>
+            <form id="checkoutForm" novalidate style="margin-top:25px;">
+                <div class="checkout-grid">
+                    <div class="form-group"><label>Full Name</label><input type="text" id="fName" class="form-control" placeholder="John Doe" required></div>
+                    <div class="form-group"><label>Email Address</label><input type="email" id="fEmail" class="form-control" placeholder="john@nexus.com" required></div>
+                </div>
+                <div class="form-group"><label>Phone Number</label><input type="tel" id="fPhone" class="form-control" placeholder="+1..." required></div>
+
+                <div class="pay-selector">
+                    <div class="pay-option active" id="btnCard" onclick="switchPayment('card')"><i data-lucide="credit-card"></i> Card</div>
+                    <div class="pay-option" id="btnCrypto" onclick="switchPayment('crypto')"><i data-lucide="wallet"></i> Crypto</div>
+                </div>
+
+                <!-- Card Pane -->
+                <div id="paneCard" class="payment-pane active">
+                    <div class="form-group"><label>Card Number</label><input type="text" id="cNum" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19"></div>
+                    <div class="checkout-grid">
+                        <div class="form-group"><label>Expiry Date</label><input type="text" id="cExp" class="form-control" placeholder="MM/YY" maxlength="5"></div>
+                        <div class="form-group"><label>CVV</label><input type="password" id="cCvv" class="form-control" placeholder="***" maxlength="3"></div>
+                    </div>
+                </div>
+
+                <!-- Crypto Pane -->
+                <div id="paneCrypto" class="payment-pane">
+                    <div class="form-group"><label>Select Network</label><select class="form-control"><option>Ethereum (ERC-20)</option><option>Solana</option></select></div>
+                    <div class="form-group"><label>Wallet Address</label><input type="text" id="cryAddr" class="form-control" placeholder="0x..."></div>
+                </div>
+
+                <div id="form-error-toast">Invalid Input. Please check all fields.</div>
+                <button type="submit" class="btn btn-p" style="width:100%; margin-top:20px;">Initialize Purchase</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal" id="successModal">
+        <div class="modal-box" style="max-width: 450px; text-align: center; border-color: var(--success);">
+            <div class="animate-pulse" style="width:70px; height:70px; background:var(--success); border-radius:50%; display:flex; align-items:center; justify-content:center; margin: 0 auto 20px; color:white;"><i data-lucide="check" size="32"></i></div>
+            <h2>Mission Successful!</h2>
+            <p style="color:#94a3b8; margin: 15px 0;">Transmission received. Welcome to the Nexus Academy.</p>
+            <button class="btn btn-p" onclick="closeSuccess()">Enter Hub</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentMethod = 'card';
+
+        function switchPayment(method) {
+            currentMethod = method;
+            document.querySelectorAll('.pay-option').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.payment-pane').forEach(el => el.classList.remove('active'));
+            document.getElementById('btn' + method.charAt(0).toUpperCase() + method.slice(1)).classList.add('active');
+            document.getElementById('pane' + method.charAt(0).toUpperCase() + method.slice(1)).classList.add('active');
+        }
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
+            document.getElementById('link-' + pageId).classList.add('active');
+            window.scrollTo(0,0);
+            initRevealObserver();
+        }
+
+        function openEnrollModal(plan) {
+            document.getElementById('modalTitle').innerText = "Enrollment: " + plan;
+            document.getElementById('enrollModal').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('enrollModal').style.display = 'none'; }
+        function closeSuccess() { document.getElementById('successModal').style.display = 'none'; }
+
+        document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const toast = document.getElementById('form-error-toast');
+            let valid = true;
+            if(!document.getElementById('fName').value || !document.getElementById('fEmail').value.includes('@')) valid = false;
+            
+            if(valid) {
+                closeModal();
+                document.getElementById('successModal').style.display = 'flex';
+                this.reset();
+            } else {
+                toast.style.display = "block";
+                setTimeout(() => toast.style.display = "none", 3000);
+            }
+        });
+
+        document.getElementById('cExp').addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2,4);
+            e.target.value = v;
+        });
+
+        function initRevealObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry, index) => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.transitionDelay = `${(index % 4) * 0.15}s`;
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            document.querySelectorAll('.reveal-item').forEach(item => observer.observe(item));
+        }
+        initRevealObserver();
+
+        const codeLines = ["// BOOTING_CORE_V10...", "const nexus = new Architect();", "while(active) {", "  nexus.build(future);", "  nexus.secure();", "}", "// DATA_SYNC_OK."];
+        let lIdx = 0, cIdx = 0;
+        const target = document.getElementById("type-target");
+
+        function type() {
+            if (lIdx < codeLines.length) {
+                if (cIdx < codeLines[lIdx].length) {
+                    target.innerHTML += codeLines[lIdx].charAt(cIdx);
+                    cIdx++; setTimeout(type, 40);
+                } else {
+                    target.innerHTML += "<br>";
+                    lIdx++; cIdx = 0; setTimeout(type, 500);
+                }
+            } else {
+                setTimeout(() => { target.innerHTML = ""; lIdx = 0; cIdx = 0; type(); }, 3000);
+            }
+        }
+        type();
+    </script>
+</body>
+</html>
